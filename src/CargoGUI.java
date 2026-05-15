@@ -124,7 +124,7 @@ public class CargoGUI {
                 double[] pa = pos(a, W, H), pb = pos(b, W, H);
                 g.setColor(hl ? ACCENT : BORDER);
                 g.setStroke(new BasicStroke(hl ? 2.8f : 1.1f,
-                    BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
+                        BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
                 g.draw(new Line2D.Double(pa[0], pa[1], pb[0], pb[1]));
 
                 // Mesafe etiketi
@@ -219,7 +219,7 @@ public class CargoGUI {
             add(buildHeader(), BorderLayout.NORTH);
 
             JSplitPane split = new JSplitPane(
-                JSplitPane.HORIZONTAL_SPLIT, buildSidebar(), buildNotebook());
+                    JSplitPane.HORIZONTAL_SPLIT, buildSidebar(), buildNotebook());
             split.setDividerLocation(245);
             split.setDividerSize(4);
             split.setBorder(null);
@@ -249,8 +249,8 @@ public class CargoGUI {
             JLabel clock = new JLabel();
             clock.setFont(MONO_SM);
             clock.setForeground(TEXT_MUTED);
-            Timer timer = new Timer(1000, e -> clock.setText(
-                LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd.MM.yyyy  HH:mm:ss"))));
+            javax.swing.Timer timer = new javax.swing.Timer(1000, e -> clock.setText(
+                    LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd.MM.yyyy  HH:mm:ss"))));
             timer.start();
             clock.setText(LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd.MM.yyyy  HH:mm:ss")));
 
@@ -269,12 +269,12 @@ public class CargoGUI {
 
             sideSection(p, "GENEL ÖZET");
             Object[][] statDefs = {
-                {"toplam",     "Toplam Kargo",   0x58A6FF},
-                {"bekleyen",   "Bekleyen",        0xE3B341},
-                {"paketlendi", "Paketlendi",      0x58A6FF},
-                {"dagitimda",  "Dağıtımda",       0xF0883E},
-                {"teslim",     "Teslim Edildi",   0x3FB950},
-                {"iptal",      "İptal",           0xFF7B72},
+                    {"toplam",     "Toplam Kargo",   0x58A6FF},
+                    {"bekleyen",   "Bekleyen",        0xE3B341},
+                    {"paketlendi", "Paketlendi",      0x58A6FF},
+                    {"dagitimda",  "Dağıtımda",       0xF0883E},
+                    {"teslim",     "Teslim Edildi",   0x3FB950},
+                    {"iptal",      "İptal",           0xFF7B72},
             };
             for (Object[] d : statDefs) {
                 Color c = new Color((int)(Integer)d[2]);
@@ -286,10 +286,10 @@ public class CargoGUI {
             sideSection(p, "VERİ YAPILARI");
 
             Object[][] dsDefs = {
-                {"avlYukseklik", "AVL Yüksekliği",  0xBC8CFF},
-                {"kuyrukBoyut",  "Kuyruk (Heap)",    0xF0883E},
-                {"stackBoyut",   "Stack (İşlem)",    0x58A6FF},
-                {"paketSayisi",  "Paket Sayısı",     0x3FB950},
+                    {"avlYukseklik", "AVL Yüksekliği",  0xBC8CFF},
+                    {"kuyrukBoyut",  "Kuyruk (Heap)",    0xF0883E},
+                    {"stackBoyut",   "Stack (İşlem)",    0x58A6FF},
+                    {"paketSayisi",  "Paket Sayısı",     0x3FB950},
             };
             for (Object[] d : dsDefs) {
                 Color c = new Color((int)(Integer)d[2]);
@@ -317,8 +317,8 @@ public class CargoGUI {
             JPanel card = new JPanel(new GridLayout(2, 1));
             card.setBackground(SURFACE2);
             card.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(BORDER, 1),
-                BorderFactory.createEmptyBorder(6, 10, 6, 10)));
+                    BorderFactory.createLineBorder(BORDER, 1),
+                    BorderFactory.createEmptyBorder(6, 10, 6, 10)));
             card.setMaximumSize(new Dimension(230, 62));
             card.setAlignmentX(Component.LEFT_ALIGNMENT);
 
@@ -342,8 +342,8 @@ public class CargoGUI {
             b.setForeground(color);
             b.setBackground(SURFACE2);
             b.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(BORDER),
-                BorderFactory.createEmptyBorder(6, 10, 6, 10)));
+                    BorderFactory.createLineBorder(BORDER),
+                    BorderFactory.createEmptyBorder(6, 10, 6, 10)));
             b.setFocusPainted(false);
             b.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
             b.setMaximumSize(new Dimension(230, 36));
@@ -630,15 +630,15 @@ public class CargoGUI {
             for (CargoBackend.Cargo c : cms.getAllCargosSorted()) {
                 if (!"Tümü".equals(filt) && !c.status.label.equals(filt)) continue;
                 if (!srch.isEmpty()
-                    && !c.id.toLowerCase().contains(srch)
-                    && !c.receiver.toLowerCase().contains(srch)
-                    && !c.sender.toLowerCase().contains(srch)) continue;
+                        && !c.id.toLowerCase().contains(srch)
+                        && !c.receiver.toLowerCase().contains(srch)
+                        && !c.sender.toLowerCase().contains(srch)) continue;
                 cargoModel.addRow(new Object[]{
-                    c.id, c.sender, c.receiver,
-                    String.format("%.1f kg", c.weight),
-                    String.format("%.1f L",  c.volume),
-                    c.priority.label, c.status.label,
-                    c.destination, String.format("₺%.0f", c.value)
+                        c.id, c.sender, c.receiver,
+                        String.format("%.1f kg", c.weight),
+                        String.format("%.1f L",  c.volume),
+                        c.priority.label, c.status.label,
+                        c.destination, String.format("₺%.0f", c.value)
                 });
             }
         }
@@ -646,7 +646,7 @@ public class CargoGUI {
         void setupCargoRenderer() {
             cargoTable.setDefaultRenderer(Object.class, new DefaultTableCellRenderer() {
                 public Component getTableCellRendererComponent(JTable t, Object v,
-                    boolean sel, boolean foc, int row, int col) {
+                                                               boolean sel, boolean foc, int row, int col) {
                     super.getTableCellRendererComponent(t, v, sel, foc, row, col);
                     setBackground(row % 2 == 0 ? SURFACE : SURFACE2);
                     setForeground(TEXT);
@@ -672,16 +672,16 @@ public class CargoGUI {
             int i = 1;
             for (CargoBackend.Cargo c : items) {
                 queueModel.addRow(new Object[]{
-                    i++, c.id, c.receiver, c.priority.label,
-                    c.destination, c.weight + "kg",
-                    c.createdAt.format(fmt)
+                        i++, c.id, c.receiver, c.priority.label,
+                        c.destination, c.weight + "kg",
+                        c.createdAt.format(fmt)
                 });
             }
 
             // Renklendirme
             queueTable.setDefaultRenderer(Object.class, new DefaultTableCellRenderer() {
                 public Component getTableCellRendererComponent(JTable t, Object v,
-                    boolean sel, boolean foc, int row, int col) {
+                                                               boolean sel, boolean foc, int row, int col) {
                     super.getTableCellRendererComponent(t, v, sel, foc, row, col);
                     setBackground(row % 2 == 0 ? SURFACE : SURFACE2);
                     setForeground(TEXT);
@@ -704,8 +704,8 @@ public class CargoGUI {
                 box.setFont(MONO_SM);
                 box.setForeground(col);
                 box.setBorder(BorderFactory.createCompoundBorder(
-                    BorderFactory.createLineBorder(col, 1),
-                    BorderFactory.createEmptyBorder(3, 6, 3, 6)));
+                        BorderFactory.createLineBorder(col, 1),
+                        BorderFactory.createEmptyBorder(3, 6, 3, 6)));
                 box.setBackground(new Color(col.getRed(), col.getGreen(), col.getBlue(), 28));
                 box.setOpaque(true);
                 heapBoxesPanel.add(box);
@@ -718,10 +718,10 @@ public class CargoGUI {
             pkgModel.setRowCount(0);
             for (CargoBackend.Package pkg : cms.getPackagesList()) {
                 pkgModel.addRow(new Object[]{
-                    pkg.id, pkg.cargos.size(),
-                    String.format("%.1f/%.0f kg", pkg.currentWeight(), pkg.maxWeight),
-                    String.format("%.1f/%.0f L",  pkg.currentVolume(), pkg.maxVolume),
-                    String.format("%.1f%%", pkg.utilization())
+                        pkg.id, pkg.cargos.size(),
+                        String.format("%.1f/%.0f kg", pkg.currentWeight(), pkg.maxWeight),
+                        String.format("%.1f/%.0f L",  pkg.currentVolume(), pkg.maxVolume),
+                        String.format("%.1f%%", pkg.utilization())
                 });
             }
         }
@@ -736,9 +736,9 @@ public class CargoGUI {
             pkgDetailModel.setRowCount(0);
             for (CargoBackend.Cargo c : pkg.cargos) {
                 pkgDetailModel.addRow(new Object[]{
-                    c.id, c.receiver,
-                    String.format("%.1f kg", c.weight),
-                    c.priority.label, c.status.label
+                        c.id, c.receiver,
+                        String.format("%.1f kg", c.weight),
+                        c.priority.label, c.status.label
                 });
             }
         }
@@ -799,18 +799,18 @@ public class CargoGUI {
             if (c == null) return;
             DateTimeFormatter fmt = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
             info(
-                "Kargo ID    : " + c.id       + "\n" +
-                "Gönderici   : " + c.sender    + "\n" +
-                "Alıcı       : " + c.receiver  + "\n" +
-                "Ağırlık     : " + c.weight    + " kg\n" +
-                "Hacim       : " + c.volume    + " L\n"  +
-                "Öncelik     : " + c.priority.label + "\n" +
-                "Durum       : " + c.status.label   + "\n" +
-                "Hedef       : " + c.destination    + "\n" +
-                "Değer       : ₺" + String.format("%.2f", c.value) + "\n" +
-                "Paket       : " + (c.packageId != null ? c.packageId : "Paketlenmedi") + "\n" +
-                "Oluşturulma : " + c.createdAt.format(fmt) + "\n" +
-                "Güncelleme  : " + c.updatedAt.format(fmt)
+                    "Kargo ID    : " + c.id       + "\n" +
+                            "Gönderici   : " + c.sender    + "\n" +
+                            "Alıcı       : " + c.receiver  + "\n" +
+                            "Ağırlık     : " + c.weight    + " kg\n" +
+                            "Hacim       : " + c.volume    + " L\n"  +
+                            "Öncelik     : " + c.priority.label + "\n" +
+                            "Durum       : " + c.status.label   + "\n" +
+                            "Hedef       : " + c.destination    + "\n" +
+                            "Değer       : ₺" + String.format("%.2f", c.value) + "\n" +
+                            "Paket       : " + (c.packageId != null ? c.packageId : "Paketlenmedi") + "\n" +
+                            "Oluşturulma : " + c.createdAt.format(fmt) + "\n" +
+                            "Güncelleme  : " + c.updatedAt.format(fmt)
             );
         }
 
@@ -833,10 +833,10 @@ public class CargoGUI {
 
             networkCanvas.highlight(fastest.path);
             routeResultLabel.setText(
-                "⚡ En Hızlı: " + String.join(" → ", fastest.path)  +
-                String.format("  (%.1f saat)    ", fastest.cost) +
-                "📏 En Kısa: " + String.join(" → ", shortest.path) +
-                String.format("  (%.0f km)", shortest.cost));
+                    "⚡ En Hızlı: " + String.join(" → ", fastest.path)  +
+                            String.format("  (%.1f saat)    ", fastest.cost) +
+                            "📏 En Kısa: " + String.join(" → ", shortest.path) +
+                            String.format("  (%.0f km)", shortest.cost));
         }
 
         // ─────────────────────────────────────
@@ -882,7 +882,7 @@ public class CargoGUI {
             g.gridx = 0; g.gridy = 6; g.weightx = 0;
             form.add(priLbl, g);
             JComboBox<String> priBox = new JComboBox<>(
-                Arrays.stream(CargoBackend.Priority.values()).map(p -> p.label).toArray(String[]::new));
+                    Arrays.stream(CargoBackend.Priority.values()).map(p -> p.label).toArray(String[]::new));
             priBox.setSelectedIndex(2);
             styleCombo(priBox);
             g.gridx = 1; g.weightx = 1;
@@ -919,11 +919,11 @@ public class CargoGUI {
                     double w   = Double.parseDouble(flds[2].getText().trim());
                     double v   = Double.parseDouble(flds[3].getText().trim());
                     double val = flds[4].getText().trim().isEmpty() ? 0
-                        : Double.parseDouble(flds[4].getText().trim());
+                            : Double.parseDouble(flds[4].getText().trim());
                     String priStr = (String) priBox.getSelectedItem();
                     CargoBackend.Priority pri = Arrays.stream(CargoBackend.Priority.values())
-                        .filter(p -> p.label.equals(priStr)).findFirst()
-                        .orElse(CargoBackend.Priority.NORMAL);
+                            .filter(p -> p.label.equals(priStr)).findFirst()
+                            .orElse(CargoBackend.Priority.NORMAL);
                     String dst = (String) dstBox.getSelectedItem();
                     cms.addCargo(s, r, w, v, pri, dst, val);
                     refreshAll();
@@ -963,7 +963,7 @@ public class CargoGUI {
             t.getTableHeader().setForeground(ACCENT);
             t.getTableHeader().setFont(MONO_BOLD);
             t.getTableHeader().setBorder(
-                BorderFactory.createMatteBorder(0, 0, 1, 0, BORDER));
+                    BorderFactory.createMatteBorder(0, 0, 1, 0, BORDER));
             return t;
         }
 
@@ -980,8 +980,8 @@ public class CargoGUI {
             f.setCaretColor(ACCENT);
             f.setFont(MONO);
             f.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(BORDER),
-                BorderFactory.createEmptyBorder(4, 8, 4, 8)));
+                    BorderFactory.createLineBorder(BORDER),
+                    BorderFactory.createEmptyBorder(4, 8, 4, 8)));
         }
 
         void styleCombo(JComboBox<?> c) {
@@ -1008,8 +1008,8 @@ public class CargoGUI {
             b.setForeground(color);
             b.setBackground(SURFACE2);
             b.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(BORDER),
-                BorderFactory.createEmptyBorder(5, 10, 5, 10)));
+                    BorderFactory.createLineBorder(BORDER),
+                    BorderFactory.createEmptyBorder(5, 10, 5, 10)));
             b.setFocusPainted(false);
             b.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
             b.addMouseListener(new MouseAdapter() {
