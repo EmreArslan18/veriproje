@@ -3,15 +3,8 @@ import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
 
-// ═══════════════════════════════════════════════════════════════════
-//  AKILLI PAKETLEME VE SIRALI KARGO YÖNETİM SİSTEMİ - BACKEND
-//  Veri Yapıları: AVL Ağacı, Stack, Priority Queue (Min-Heap), Graf (Dijkstra), Deque
-// ═══════════════════════════════════════════════════════════════════
 public class CargoBackend {
 
-    // ─────────────────────────────────────────
-    // ENUM'LAR
-    // ─────────────────────────────────────────
     public enum CargoStatus {
         BEKLEMEDE("Beklemede"),
         PAKETLENDI("Paketlendi"),
@@ -36,9 +29,6 @@ public class CargoBackend {
         @Override public String toString() { return label; }
     }
 
-    // ─────────────────────────────────────────
-    // KARGO MODELİ
-    // ─────────────────────────────────────────
     public static class Cargo implements Comparable<Cargo> {
         static int counter = 1;
 
@@ -72,9 +62,6 @@ public class CargoBackend {
         @Override public String toString() { return id; }
     }
 
-    // ─────────────────────────────────────────
-    // PAKET MODELİ
-    // ─────────────────────────────────────────
     public static class Package {
         static int counter = 1;
 
@@ -101,7 +88,7 @@ public class CargoBackend {
 
         public boolean canFit(Cargo c) {
             return currentWeight() + c.weight <= maxWeight &&
-                   currentVolume() + c.volume <= maxVolume;
+                    currentVolume() + c.volume <= maxVolume;
         }
 
         public boolean addCargo(Cargo c) {
@@ -114,9 +101,6 @@ public class CargoBackend {
         }
     }
 
-    // ─────────────────────────────────────────
-    // AVL AĞACI – Kargo kayıt / ID'ye göre arama
-    // ─────────────────────────────────────────
     public static class AVLTree {
 
         static class Node {
@@ -198,9 +182,6 @@ public class CargoBackend {
         public int size()       { return size; }
     }
 
-    // ─────────────────────────────────────────
-    // STACK – İşlem geçmişi / geri al (LIFO)
-    // ─────────────────────────────────────────
     public static class ActionStack {
 
         public static class Action {
@@ -226,7 +207,6 @@ public class CargoBackend {
 
         public void push(Action a) {
             if (stack.size() >= maxSize) {
-                // En alttan çıkar
                 List<Action> list = new ArrayList<>(stack);
                 stack.clear();
                 for (int i = 1; i < list.size(); i++) stack.addLast(list.get(i));
@@ -242,17 +222,14 @@ public class CargoBackend {
         public List<Action> history() { return new ArrayList<>(stack); }
     }
 
-    // ─────────────────────────────────────────
-    // ÖNCELİK KUYRUĞU – Min-Heap (Java PriorityQueue)
-    // ─────────────────────────────────────────
     public static class CargoPriorityQueue {
 
         private final java.util.PriorityQueue<Cargo> heap;
 
         public CargoPriorityQueue() {
             heap = new java.util.PriorityQueue<>(
-                Comparator.comparingInt((Cargo c) -> c.priority.value)
-                          .thenComparing(c -> c.createdAt)
+                    Comparator.comparingInt((Cargo c) -> c.priority.value)
+                            .thenComparing(c -> c.createdAt)
             );
         }
 
@@ -274,20 +251,17 @@ public class CargoBackend {
 
         public List<Cargo> allItems() {
             return heap.stream()
-                .filter(c -> c.status == CargoStatus.BEKLEMEDE)
-                .sorted(Comparator.comparingInt((Cargo c) -> c.priority.value))
-                .collect(Collectors.toList());
+                    .filter(c -> c.status == CargoStatus.BEKLEMEDE)
+                    .sorted(Comparator.comparingInt((Cargo c) -> c.priority.value))
+                    .collect(Collectors.toList());
         }
 
         public int size() {
             return (int) heap.stream()
-                .filter(c -> c.status == CargoStatus.BEKLEMEDE).count();
+                    .filter(c -> c.status == CargoStatus.BEKLEMEDE).count();
         }
     }
 
-    // ─────────────────────────────────────────
-    // DEQUE – Paketleme hattı tamponu
-    // ─────────────────────────────────────────
     public static class PackagingBuffer {
 
         private final Deque<Cargo> buf;
@@ -305,9 +279,6 @@ public class CargoBackend {
         public List<Cargo> items()     { return new ArrayList<>(buf); }
     }
 
-    // ─────────────────────────────────────────
-    // DAĞITIM GRAFI – Dijkstra en kısa / hızlı rota
-    // ─────────────────────────────────────────
     public static class DistributionGraph {
 
         public static class Edge {
@@ -332,7 +303,6 @@ public class CargoBackend {
             cities.add(b);
         }
 
-        /** byTime=true → en hızlı rota (saat),  byTime=false → en kısa rota (km) */
         public RouteResult dijkstra(String src, String dst, boolean byTime) {
             Map<String, Double> dist = new HashMap<>();
             Map<String, String> prev = new HashMap<>();
@@ -340,7 +310,7 @@ public class CargoBackend {
             dist.put(src, 0.0);
 
             java.util.PriorityQueue<String> pq = new java.util.PriorityQueue<>(
-                Comparator.comparingDouble(dist::get));
+                    Comparator.comparingDouble(dist::get));
             pq.offer(src);
 
             while (!pq.isEmpty()) {
@@ -366,28 +336,74 @@ public class CargoBackend {
             return adj.getOrDefault(city, List.of());
         }
 
-        /** Tüm kenarları tekrarsız döndürür: [şehirA, şehirB, km, saat] */
         public List<String[]> allRoutes() {
             Set<String> seen   = new HashSet<>();
             List<String[]> res = new ArrayList<>();
             for (Map.Entry<String, List<Edge>> e : adj.entrySet()) {
                 for (Edge edge : e.getValue()) {
                     String key = e.getKey().compareTo(edge.to) < 0
-                        ? e.getKey() + "|" + edge.to
-                        : edge.to   + "|" + e.getKey();
+                            ? e.getKey() + "|" + edge.to
+                            : edge.to   + "|" + e.getKey();
                     if (seen.add(key))
                         res.add(new String[]{e.getKey(), edge.to,
-                            String.valueOf((int) edge.distance),
-                            String.valueOf(edge.timeHours)});
+                                String.valueOf((int) edge.distance),
+                                String.valueOf(edge.timeHours)});
                 }
             }
             return res;
         }
     }
 
-    // ═══════════════════════════════════════════
-    //  ANA SİSTEM – tüm veri yapılarını yönetir
-    // ═══════════════════════════════════════════
+    // ── Kullanıcı Sistemi ────────────────────
+    public static class UserSystem {
+        public static class User {
+            public final String username;
+            public final String passwordHash;
+            public final String fullName;
+            public final String email;
+            public final LocalDateTime createdAt;
+
+            public User(String username, String password, String fullName, String email) {
+                this.username     = username;
+                this.passwordHash = hash(password);
+                this.fullName     = fullName;
+                this.email        = email;
+                this.createdAt    = LocalDateTime.now();
+            }
+
+            static String hash(String password) {
+                // Basit hash (gerçek uygulamada bcrypt kullanın)
+                return Integer.toHexString(password.hashCode());
+            }
+        }
+
+        private final Map<String, User> users = new LinkedHashMap<>();
+
+        public UserSystem() {
+            // Varsayılan admin hesabı
+            register("admin", "admin123", "Admin Kullanıcı", "admin@kargo.com");
+        }
+
+        public boolean register(String username, String password, String fullName, String email) {
+            if (username == null || username.trim().isEmpty()) return false;
+            if (password == null || password.length() < 6)    return false;
+            if (users.containsKey(username.toLowerCase()))     return false;
+            users.put(username.toLowerCase(), new User(username, password, fullName, email));
+            return true;
+        }
+
+        public User login(String username, String password) {
+            User u = users.get(username.toLowerCase());
+            if (u == null) return null;
+            if (!u.passwordHash.equals(User.hash(password))) return null;
+            return u;
+        }
+
+        public boolean usernameExists(String username) {
+            return users.containsKey(username.toLowerCase());
+        }
+    }
+
     public static class CargoManagementSystem {
 
         public final AVLTree              avl    = new AVLTree();
@@ -395,6 +411,7 @@ public class CargoBackend {
         public final ActionStack          stack  = new ActionStack(100);
         public final PackagingBuffer      buffer = new PackagingBuffer(20);
         public final DistributionGraph    graph  = new DistributionGraph();
+        public final UserSystem           userSystem = new UserSystem();
 
         public final Map<String, Cargo>   cargos   = new LinkedHashMap<>();
         public final Map<String, Package> packages = new LinkedHashMap<>();
@@ -403,30 +420,28 @@ public class CargoBackend {
             buildNetwork();
         }
 
-        // ── Ağ kurulumu ──────────────────────
         private void buildNetwork() {
             Object[][] routes = {
-                {"Istanbul",  "Ankara",    450, 5.0},
-                {"Istanbul",  "Bursa",     160, 2.5},
-                {"Istanbul",  "Izmir",     570, 7.0},
-                {"Ankara",    "Izmir",     590, 7.5},
-                {"Ankara",    "Konya",     260, 3.5},
-                {"Ankara",    "Samsun",    420, 5.5},
-                {"Izmir",     "Antalya",   480, 6.0},
-                {"Izmir",     "Mugla",     260, 3.5},
-                {"Antalya",   "Konya",     210, 3.0},
-                {"Bursa",     "Eskisehir", 150, 2.0},
-                {"Eskisehir", "Ankara",    235, 3.0},
-                {"Samsun",    "Trabzon",   340, 4.5},
-                {"Konya",     "Adana",     330, 4.5},
-                {"Adana",     "Gaziantep", 190, 2.5},
+                    {"Istanbul",  "Ankara",    450, 5.0},
+                    {"Istanbul",  "Bursa",     160, 2.5},
+                    {"Istanbul",  "Izmir",     570, 7.0},
+                    {"Ankara",    "Izmir",     590, 7.5},
+                    {"Ankara",    "Konya",     260, 3.5},
+                    {"Ankara",    "Samsun",    420, 5.5},
+                    {"Izmir",     "Antalya",   480, 6.0},
+                    {"Izmir",     "Mugla",     260, 3.5},
+                    {"Antalya",   "Konya",     210, 3.0},
+                    {"Bursa",     "Eskisehir", 150, 2.0},
+                    {"Eskisehir", "Ankara",    235, 3.0},
+                    {"Samsun",    "Trabzon",   340, 4.5},
+                    {"Konya",     "Adana",     330, 4.5},
+                    {"Adana",     "Gaziantep", 190, 2.5},
             };
             for (Object[] r : routes)
                 graph.addRoute((String)r[0], (String)r[1],
-                    ((Number)r[2]).doubleValue(), ((Number)r[3]).doubleValue());
+                        ((Number)r[2]).doubleValue(), ((Number)r[3]).doubleValue());
         }
 
-        // ── Kargo ekle ───────────────────────
         public Cargo addCargo(String sender, String receiver, double weight, double volume,
                               Priority priority, String destination, double value) {
             Cargo c = new Cargo(sender, receiver, weight, volume, priority, destination, value);
@@ -434,11 +449,10 @@ public class CargoBackend {
             queue.enqueue(c);
             cargos.put(c.id, c);
             stack.push(new ActionStack.Action("KARGO_EKLE", c.id,
-                c.id + " eklendi (" + priority.label + ")"));
+                    c.id + " eklendi (" + priority.label + ")"));
             return c;
         }
 
-        // ── Kargo iptal ──────────────────────
         public boolean cancelCargo(String id) {
             Cargo c = avl.search(id);
             if (c == null || c.status == CargoStatus.TESLIM_EDILDI) return false;
@@ -448,13 +462,12 @@ public class CargoBackend {
             return true;
         }
 
-        // ── Otomatik paketleme (FFD) ─────────
         public List<Package> autoPackage() {
             List<Cargo> waiting = cargos.values().stream()
-                .filter(c -> c.status == CargoStatus.BEKLEMEDE)
-                .sorted(Comparator.comparingInt((Cargo c) -> c.priority.value)
-                    .thenComparingDouble((Cargo c) -> -c.weight))
-                .collect(Collectors.toList());
+                    .filter(c -> c.status == CargoStatus.BEKLEMEDE)
+                    .sorted(Comparator.comparingInt((Cargo c) -> c.priority.value)
+                            .thenComparingDouble((Cargo c) -> -c.weight))
+                    .collect(Collectors.toList());
 
             List<Package> newPkgs = new ArrayList<>();
             List<Package> open    = new ArrayList<>();
@@ -474,11 +487,10 @@ public class CargoBackend {
                 }
             }
             stack.push(new ActionStack.Action("OTO_PAKET", null,
-                newPkgs.size() + " yeni paket oluşturuldu"));
+                    newPkgs.size() + " yeni paket oluşturuldu"));
             return newPkgs;
         }
 
-        // ── Manuel paketleme ─────────────────
         public boolean packageCargo(String cargoId, String pkgId) {
             Cargo c = avl.search(cargoId);
             if (c == null || c.status != CargoStatus.BEKLEMEDE) return false;
@@ -494,11 +506,10 @@ public class CargoBackend {
 
             boolean ok = pkg.addCargo(c);
             if (ok) stack.push(new ActionStack.Action("PAKETLEME", cargoId,
-                cargoId + " → " + pkg.id));
+                    cargoId + " → " + pkg.id));
             return ok;
         }
 
-        // ── Kargo teslim et ──────────────────
         public boolean deliverCargo(String id) {
             Cargo c = avl.search(id);
             if (c == null || c.status != CargoStatus.DAGITIMDA) return false;
@@ -508,7 +519,6 @@ public class CargoBackend {
             return true;
         }
 
-        // ── Paketi sevkiyata ver ──────────────
         public boolean dispatchPackage(String pkgId) {
             Package pkg = packages.get(pkgId);
             if (pkg == null) return false;
@@ -517,11 +527,10 @@ public class CargoBackend {
                 c.updatedAt = LocalDateTime.now();
             });
             stack.push(new ActionStack.Action("SEVKİYAT", null,
-                pkgId + " sevkiyata verildi"));
+                    pkgId + " sevkiyata verildi"));
             return true;
         }
 
-        // ── Son işlemi geri al ───────────────
         public ActionStack.Action undoLast() {
             ActionStack.Action a = stack.pop();
             if (a != null && "KARGO_EKLE".equals(a.type)) {
@@ -532,7 +541,6 @@ public class CargoBackend {
             return a;
         }
 
-        // ── Dashboard istatistikleri ──────────
         public Map<String, Object> dashboardStats() {
             Map<String, Object> s = new LinkedHashMap<>();
             s.put("toplam",       cargos.size());
@@ -552,11 +560,10 @@ public class CargoBackend {
             return cargos.values().stream().filter(c -> c.status == st).count();
         }
 
-        // ── Yardımcı erişimciler ─────────────
-        public List<Cargo>   getAllCargosSorted()   { return avl.inorder(); }
-        public List<Cargo>   getWaitingQueue()      { return queue.allItems(); }
-        public List<Package> getPackagesList()      { return new ArrayList<>(packages.values()); }
-        public List<ActionStack.Action> getHistory(){ return stack.history(); }
-        public Cargo         searchCargo(String id) { return avl.search(id); }
+        public List<Cargo>   getAllCargosSorted()    { return avl.inorder(); }
+        public List<Cargo>   getWaitingQueue()       { return queue.allItems(); }
+        public List<Package> getPackagesList()       { return new ArrayList<>(packages.values()); }
+        public List<ActionStack.Action> getHistory() { return stack.history(); }
+        public Cargo         searchCargo(String id)  { return avl.search(id); }
     }
 }

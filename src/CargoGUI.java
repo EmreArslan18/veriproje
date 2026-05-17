@@ -9,12 +9,6 @@ import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.List;
 
-// ═══════════════════════════════════════════════════════════════════
-//  AKILLI PAKETLEME VE SIRALI KARGO YÖNETİM SİSTEMİ - GUI
-//  CargoBackend.java dosyasını kullanır.
-//  Derleme: javac CargoBackend.java CargoGUI.java
-//  Çalıştırma: java CargoGUI
-// ═══════════════════════════════════════════════════════════════════
 public class CargoGUI {
 
     // ─────────────────────────────────────────
@@ -40,9 +34,6 @@ public class CargoGUI {
     static final Font MONO_LG   = new Font("Consolas", Font.BOLD,   20);
     static final Font MONO_MD   = new Font("Consolas", Font.BOLD,   16);
 
-    // ─────────────────────────────────────────
-    // RENK YARDIMCILARI
-    // ─────────────────────────────────────────
     static Color priorityColor(CargoBackend.Priority p) {
         return switch (p) {
             case ACIL   -> RED;
@@ -60,6 +51,385 @@ public class CargoGUI {
             case TESLIM_EDILDI -> GREEN;
             case IPTAL         -> RED;
         };
+    }
+
+    // ═══════════════════════════════════════════
+    //  GİRİŞ / KAYIT EKRANI
+    // ═══════════════════════════════════════════
+    static class AuthWindow extends JFrame {
+
+        final CargoBackend.CargoManagementSystem cms;
+        CargoBackend.UserSystem.User loggedInUser = null;
+
+        // Panel referansları
+        JPanel cardPanel;
+        CardLayout cardLayout;
+
+        // Giriş alanları
+        JTextField     loginUserField;
+        JPasswordField loginPassField;
+        JLabel         loginErrLabel;
+
+        // Kayıt alanları
+        JTextField     regUserField, regFullNameField, regEmailField;
+        JPasswordField regPassField, regPassConfirmField;
+        JLabel         regErrLabel;
+
+        AuthWindow(CargoBackend.CargoManagementSystem cms) {
+            super("🚚 Kargo Yönetim Sistemi – Giriş");
+            this.cms = cms;
+            setDefaultCloseOperation(EXIT_ON_CLOSE);
+            setSize(460, 560);
+            setResizable(false);
+            setLocationRelativeTo(null);
+            getContentPane().setBackground(BG);
+            setLayout(new BorderLayout());
+
+            add(buildAuthHeader(), BorderLayout.NORTH);
+
+            cardLayout = new CardLayout();
+            cardPanel  = new JPanel(cardLayout);
+            cardPanel.setBackground(BG);
+            cardPanel.add(buildLoginPanel(),    "LOGIN");
+            cardPanel.add(buildRegisterPanel(), "REGISTER");
+            add(cardPanel, BorderLayout.CENTER);
+
+            cardLayout.show(cardPanel, "LOGIN");
+        }
+
+        // ── Auth Header ──────────────────────
+        JPanel buildAuthHeader() {
+            JPanel p = new JPanel();
+            p.setLayout(new BoxLayout(p, BoxLayout.Y_AXIS));
+            p.setBackground(SURFACE);
+            p.setBorder(BorderFactory.createEmptyBorder(28, 0, 20, 0));
+
+            // Logo/ikon alanı
+            JLabel icon = new JLabel("⬡", SwingConstants.CENTER);
+            icon.setFont(new Font("Segoe UI Emoji", Font.PLAIN, 40));
+            icon.setForeground(ACCENT);
+            icon.setAlignmentX(Component.CENTER_ALIGNMENT);
+
+            JLabel title = new JLabel("KARGO YÖNETİM SİSTEMİ", SwingConstants.CENTER);
+            title.setFont(new Font("Consolas", Font.BOLD, 16));
+            title.setForeground(ACCENT);
+            title.setAlignmentX(Component.CENTER_ALIGNMENT);
+
+            JLabel sub = new JLabel("AVL · Heap · Stack · Dijkstra · Deque", SwingConstants.CENTER);
+            sub.setFont(MONO_SM);
+            sub.setForeground(TEXT_MUTED);
+            sub.setAlignmentX(Component.CENTER_ALIGNMENT);
+
+            p.add(icon);
+            p.add(Box.createVerticalStrut(6));
+            p.add(title);
+            p.add(Box.createVerticalStrut(4));
+            p.add(sub);
+            p.add(Box.createVerticalStrut(16));
+
+            JSeparator sep = new JSeparator();
+            sep.setForeground(BORDER);
+            sep.setMaximumSize(new Dimension(460, 1));
+            p.add(sep);
+
+            return p;
+        }
+
+        // ── GİRİŞ PANELİ ────────────────────
+        JPanel buildLoginPanel() {
+            JPanel outer = new JPanel(new GridBagLayout());
+            outer.setBackground(BG);
+
+            JPanel p = new JPanel();
+            p.setLayout(new BoxLayout(p, BoxLayout.Y_AXIS));
+            p.setBackground(SURFACE);
+            p.setBorder(BorderFactory.createCompoundBorder(
+                    BorderFactory.createLineBorder(BORDER, 1),
+                    BorderFactory.createEmptyBorder(28, 32, 28, 32)
+            ));
+            p.setMaximumSize(new Dimension(360, 999));
+
+            // Başlık
+            JLabel h = new JLabel("Hesabına Giriş Yap");
+            h.setFont(new Font("Consolas", Font.BOLD, 15));
+            h.setForeground(TEXT);
+            h.setAlignmentX(Component.CENTER_ALIGNMENT);
+            p.add(h);
+            p.add(Box.createVerticalStrut(24));
+
+            // Kullanıcı adı
+            p.add(authLabel("Kullanıcı Adı"));
+            p.add(Box.createVerticalStrut(4));
+            loginUserField = authField("admin");
+            p.add(loginUserField);
+            p.add(Box.createVerticalStrut(14));
+
+            // Şifre
+            p.add(authLabel("Şifre"));
+            p.add(Box.createVerticalStrut(4));
+            loginPassField = authPassField("••••••••");
+            p.add(loginPassField);
+            p.add(Box.createVerticalStrut(8));
+
+            // Demo bilgi
+            JLabel hint = new JLabel("Demo: kullanıcı=admin  şifre=admin123");
+            hint.setFont(MONO_SM);
+            hint.setForeground(TEXT_MUTED);
+            hint.setAlignmentX(Component.LEFT_ALIGNMENT);
+            p.add(hint);
+            p.add(Box.createVerticalStrut(18));
+
+            // Hata etiketi
+            loginErrLabel = new JLabel(" ");
+            loginErrLabel.setFont(MONO_SM);
+            loginErrLabel.setForeground(RED);
+            loginErrLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+            p.add(loginErrLabel);
+            p.add(Box.createVerticalStrut(6));
+
+            // Giriş butonu
+            JButton loginBtn = bigBtn("Giriş Yap", ACCENT, BG);
+            loginBtn.addActionListener(e -> doLogin());
+            p.add(loginBtn);
+            p.add(Box.createVerticalStrut(16));
+
+            JSeparator sep = new JSeparator();
+            sep.setForeground(BORDER);
+            sep.setMaximumSize(new Dimension(300, 1));
+            sep.setAlignmentX(Component.CENTER_ALIGNMENT);
+            p.add(sep);
+            p.add(Box.createVerticalStrut(14));
+
+            // Kayıt ol linki
+            JPanel linkRow = new JPanel(new FlowLayout(FlowLayout.CENTER, 4, 0));
+            linkRow.setBackground(SURFACE);
+            JLabel linkLbl = new JLabel("Hesabın yok mu?");
+            linkLbl.setFont(MONO_SM);
+            linkLbl.setForeground(TEXT_DIM);
+            JButton regLink = linkBtn("Kayıt Ol");
+            regLink.addActionListener(e -> {
+                loginErrLabel.setText(" ");
+                cardLayout.show(cardPanel, "REGISTER");
+            });
+            linkRow.add(linkLbl);
+            linkRow.add(regLink);
+            linkRow.setAlignmentX(Component.CENTER_ALIGNMENT);
+            p.add(linkRow);
+
+            // Enter key
+            getRootPane().setDefaultButton(loginBtn);
+            loginPassField.addActionListener(e -> doLogin());
+
+            outer.add(p);
+            return outer;
+        }
+
+        // ── KAYIT PANELİ ────────────────────
+        JPanel buildRegisterPanel() {
+            JPanel outer = new JPanel(new GridBagLayout());
+            outer.setBackground(BG);
+
+            JPanel p = new JPanel();
+            p.setLayout(new BoxLayout(p, BoxLayout.Y_AXIS));
+            p.setBackground(SURFACE);
+            p.setBorder(BorderFactory.createCompoundBorder(
+                    BorderFactory.createLineBorder(BORDER, 1),
+                    BorderFactory.createEmptyBorder(24, 32, 24, 32)
+            ));
+
+            JLabel h = new JLabel("Yeni Hesap Oluştur");
+            h.setFont(new Font("Consolas", Font.BOLD, 15));
+            h.setForeground(TEXT);
+            h.setAlignmentX(Component.CENTER_ALIGNMENT);
+            p.add(h);
+            p.add(Box.createVerticalStrut(20));
+
+            // Ad Soyad
+            p.add(authLabel("Ad Soyad"));
+            p.add(Box.createVerticalStrut(4));
+            regFullNameField = authField("Ahmet Yılmaz");
+            p.add(regFullNameField);
+            p.add(Box.createVerticalStrut(12));
+
+            // Kullanıcı adı
+            p.add(authLabel("Kullanıcı Adı"));
+            p.add(Box.createVerticalStrut(4));
+            regUserField = authField("kullanici123");
+            p.add(regUserField);
+            p.add(Box.createVerticalStrut(12));
+
+            // E-posta
+            p.add(authLabel("E-posta"));
+            p.add(Box.createVerticalStrut(4));
+            regEmailField = authField("ornek@email.com");
+            p.add(regEmailField);
+            p.add(Box.createVerticalStrut(12));
+
+            // Şifre
+            p.add(authLabel("Şifre (en az 6 karakter)"));
+            p.add(Box.createVerticalStrut(4));
+            regPassField = authPassField("");
+            p.add(regPassField);
+            p.add(Box.createVerticalStrut(12));
+
+            // Şifre tekrar
+            p.add(authLabel("Şifre Tekrar"));
+            p.add(Box.createVerticalStrut(4));
+            regPassConfirmField = authPassField("");
+            p.add(regPassConfirmField);
+            p.add(Box.createVerticalStrut(12));
+
+            // Hata
+            regErrLabel = new JLabel(" ");
+            regErrLabel.setFont(MONO_SM);
+            regErrLabel.setForeground(RED);
+            regErrLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+            p.add(regErrLabel);
+            p.add(Box.createVerticalStrut(6));
+
+            // Kayıt butonu
+            JButton regBtn = bigBtn("Kayıt Ol", GREEN, BG);
+            regBtn.addActionListener(e -> doRegister());
+            p.add(regBtn);
+            p.add(Box.createVerticalStrut(14));
+
+            JSeparator sep = new JSeparator();
+            sep.setForeground(BORDER);
+            sep.setMaximumSize(new Dimension(300, 1));
+            sep.setAlignmentX(Component.CENTER_ALIGNMENT);
+            p.add(sep);
+            p.add(Box.createVerticalStrut(12));
+
+            JPanel linkRow = new JPanel(new FlowLayout(FlowLayout.CENTER, 4, 0));
+            linkRow.setBackground(SURFACE);
+            JLabel linkLbl = new JLabel("Zaten hesabın var mı?");
+            linkLbl.setFont(MONO_SM);
+            linkLbl.setForeground(TEXT_DIM);
+            JButton loginLink = linkBtn("Giriş Yap");
+            loginLink.addActionListener(e -> {
+                regErrLabel.setText(" ");
+                cardLayout.show(cardPanel, "LOGIN");
+            });
+            linkRow.add(linkLbl);
+            linkRow.add(loginLink);
+            linkRow.setAlignmentX(Component.CENTER_ALIGNMENT);
+            p.add(linkRow);
+
+            outer.add(p);
+            return outer;
+        }
+
+        // ── AKSİYONLAR ──────────────────────
+        void doLogin() {
+            String user = loginUserField.getText().trim();
+            String pass = new String(loginPassField.getPassword());
+            CargoBackend.UserSystem.User u = cms.userSystem.login(user, pass);
+            if (u == null) {
+                loginErrLabel.setText("❌ Kullanıcı adı veya şifre hatalı.");
+                loginPassField.setText("");
+                return;
+            }
+            loggedInUser = u;
+            dispose();
+            SwingUtilities.invokeLater(() -> new MainWindow(cms, u).setVisible(true));
+        }
+
+        void doRegister() {
+            String fullName = regFullNameField.getText().trim();
+            String username = regUserField.getText().trim();
+            String email    = regEmailField.getText().trim();
+            String pass     = new String(regPassField.getPassword());
+            String passConf = new String(regPassConfirmField.getPassword());
+
+            if (fullName.isEmpty()) { regErrLabel.setText("❌ Ad soyad zorunlu."); return; }
+            if (username.isEmpty()) { regErrLabel.setText("❌ Kullanıcı adı zorunlu."); return; }
+            if (username.length() < 3) { regErrLabel.setText("❌ Kullanıcı adı en az 3 karakter."); return; }
+            if (email.isEmpty() || !email.contains("@")) { regErrLabel.setText("❌ Geçerli bir e-posta girin."); return; }
+            if (pass.length() < 6) { regErrLabel.setText("❌ Şifre en az 6 karakter olmalı."); return; }
+            if (!pass.equals(passConf)) { regErrLabel.setText("❌ Şifreler uyuşmuyor."); return; }
+            if (cms.userSystem.usernameExists(username)) { regErrLabel.setText("❌ Bu kullanıcı adı zaten alınmış."); return; }
+
+            boolean ok = cms.userSystem.register(username, pass, fullName, email);
+            if (!ok) { regErrLabel.setText("❌ Kayıt başarısız."); return; }
+
+            // Başarılı kayıt → giriş yaptır
+            CargoBackend.UserSystem.User u = cms.userSystem.login(username, pass);
+            dispose();
+            SwingUtilities.invokeLater(() -> new MainWindow(cms, u).setVisible(true));
+        }
+
+        // ── Yardımcı widget'lar ──────────────
+        JLabel authLabel(String text) {
+            JLabel l = new JLabel(text);
+            l.setFont(MONO);
+            l.setForeground(TEXT_DIM);
+            l.setAlignmentX(Component.LEFT_ALIGNMENT);
+            return l;
+        }
+
+        JTextField authField(String placeholder) {
+            JTextField f = new JTextField();
+            f.setBackground(SURFACE2);
+            f.setForeground(TEXT);
+            f.setCaretColor(ACCENT);
+            f.setFont(MONO);
+            f.setBorder(BorderFactory.createCompoundBorder(
+                    BorderFactory.createLineBorder(BORDER),
+                    BorderFactory.createEmptyBorder(8, 10, 8, 10)));
+            f.setMaximumSize(new Dimension(Integer.MAX_VALUE, 36));
+            f.setAlignmentX(Component.LEFT_ALIGNMENT);
+            // Placeholder effect
+            f.setForeground(TEXT_MUTED);
+            f.setText(placeholder);
+            f.addFocusListener(new FocusAdapter() {
+                public void focusGained(FocusEvent e) {
+                    if (f.getText().equals(placeholder)) { f.setText(""); f.setForeground(TEXT); }
+                }
+                public void focusLost(FocusEvent e) {
+                    if (f.getText().isEmpty()) { f.setText(placeholder); f.setForeground(TEXT_MUTED); }
+                }
+            });
+            return f;
+        }
+
+        JPasswordField authPassField(String placeholder) {
+            JPasswordField f = new JPasswordField();
+            f.setBackground(SURFACE2);
+            f.setForeground(TEXT);
+            f.setCaretColor(ACCENT);
+            f.setFont(MONO);
+            f.setBorder(BorderFactory.createCompoundBorder(
+                    BorderFactory.createLineBorder(BORDER),
+                    BorderFactory.createEmptyBorder(8, 10, 8, 10)));
+            f.setMaximumSize(new Dimension(Integer.MAX_VALUE, 36));
+            f.setAlignmentX(Component.LEFT_ALIGNMENT);
+            return f;
+        }
+
+        JButton bigBtn(String text, Color bg, Color fg) {
+            JButton b = new JButton(text);
+            b.setFont(new Font("Consolas", Font.BOLD, 13));
+            b.setBackground(bg);
+            b.setForeground(fg);
+            b.setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 20));
+            b.setFocusPainted(false);
+            b.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+            b.setAlignmentX(Component.CENTER_ALIGNMENT);
+            b.setMaximumSize(new Dimension(Integer.MAX_VALUE, 42));
+            return b;
+        }
+
+        JButton linkBtn(String text) {
+            JButton b = new JButton(text);
+            b.setFont(new Font("Consolas", Font.BOLD, 10));
+            b.setForeground(ACCENT);
+            b.setBackground(null);
+            b.setBorder(BorderFactory.createEmptyBorder(0, 2, 0, 2));
+            b.setFocusPainted(false);
+            b.setContentAreaFilled(false);
+            b.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+            return b;
+        }
     }
 
     // ═══════════════════════════════════════════
@@ -106,7 +476,6 @@ public class CargoGUI {
             int W = getWidth(), H = getHeight();
             if (W < 10 || H < 10) return;
 
-            // Vurgulanan kenar seti
             Set<String> hpEdges = new HashSet<>();
             if (highlightPath.size() > 1) {
                 for (int i = 0; i < highlightPath.size() - 1; i++) {
@@ -115,7 +484,6 @@ public class CargoGUI {
                 }
             }
 
-            // Kenarları çiz
             for (String[] r : graph.allRoutes()) {
                 String a = r[0], b = r[1];
                 String key = a.compareTo(b) < 0 ? a + "|" + b : b + "|" + a;
@@ -123,43 +491,36 @@ public class CargoGUI {
 
                 double[] pa = pos(a, W, H), pb = pos(b, W, H);
                 g.setColor(hl ? ACCENT : BORDER);
-                g.setStroke(new BasicStroke(hl ? 2.8f : 1.1f,
-                        BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
+                g.setStroke(new BasicStroke(hl ? 2.8f : 1.1f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
                 g.draw(new Line2D.Double(pa[0], pa[1], pb[0], pb[1]));
 
-                // Mesafe etiketi
                 double mx = (pa[0] + pb[0]) / 2, my = (pa[1] + pb[1]) / 2;
                 g.setFont(new Font("Consolas", Font.PLAIN, 9));
                 g.setColor(hl ? ACCENT : TEXT_MUTED);
                 g.drawString(r[2] + "km", (int) mx, (int) my);
             }
 
-            // Düğümleri çiz
             final int R = 20;
             for (Map.Entry<String, double[]> e : CITY_POS.entrySet()) {
                 String city = e.getKey();
                 double[] p  = pos(city, W, H);
                 boolean hl  = highlightPath.contains(city);
 
-                // Gölge
                 g.setColor(new Color(0, 0, 0, 60));
                 g.fillOval((int) p[0] - R + 2, (int) p[1] - R + 2, R * 2, R * 2);
 
-                // Çember
                 g.setColor(hl ? ACCENT : SURFACE2);
                 g.fillOval((int) p[0] - R, (int) p[1] - R, R * 2, R * 2);
                 g.setColor(hl ? ACCENT : BORDER);
                 g.setStroke(new BasicStroke(hl ? 2.5f : 1.5f));
                 g.drawOval((int) p[0] - R, (int) p[1] - R, R * 2, R * 2);
 
-                // Kısaltma
                 String abbr = city.substring(0, Math.min(3, city.length())).toUpperCase();
                 g.setFont(new Font("Consolas", Font.BOLD, 8));
                 g.setColor(hl ? BG : TEXT);
                 FontMetrics fm = g.getFontMetrics();
                 g.drawString(abbr, (int) p[0] - fm.stringWidth(abbr) / 2, (int) p[1] + 4);
 
-                // Şehir adı
                 g.setFont(new Font("Consolas", Font.PLAIN, 8));
                 g.setColor(TEXT_DIM);
                 FontMetrics fm2 = g.getFontMetrics();
@@ -178,31 +539,28 @@ public class CargoGUI {
     // ═══════════════════════════════════════════
     static class MainWindow extends JFrame {
 
-        final CargoBackend.CargoManagementSystem cms = new CargoBackend.CargoManagementSystem();
+        final CargoBackend.CargoManagementSystem cms;
+        final CargoBackend.UserSystem.User       currentUser;
 
-        // Stat kartları
         final Map<String, JLabel> statLabels = new LinkedHashMap<>();
         final Map<String, JLabel> dsLabels   = new LinkedHashMap<>();
 
-        // Tablolar
         JTable cargoTable, queueTable, pkgTable, pkgDetailTable, historyTable;
         DefaultTableModel cargoModel, queueModel, pkgModel, pkgDetailModel, histModel;
 
-        // Filtre & arama
-        JTextField  searchField;
+        JTextField        searchField;
         JComboBox<String> statusFilter;
 
-        // Rota
         NetworkCanvas     networkCanvas;
         JComboBox<String> srcCombo, dstCombo;
         JLabel            routeResultLabel;
 
-        // Heap panel referansı
         JPanel heapBoxesPanel;
 
-        // ─────────────────────────────────────
-        MainWindow() {
+        MainWindow(CargoBackend.CargoManagementSystem cms, CargoBackend.UserSystem.User user) {
             super("🚚 Akıllı Kargo Yönetim Sistemi");
+            this.cms         = cms;
+            this.currentUser = user;
             setDefaultCloseOperation(EXIT_ON_CLOSE);
             setSize(1400, 900);
             setMinimumSize(new Dimension(1100, 700));
@@ -213,7 +571,6 @@ public class CargoGUI {
             refreshAll();
         }
 
-        // ── Ana yerleşim ─────────────────────
         void buildUI() {
             setLayout(new BorderLayout());
             add(buildHeader(), BorderLayout.NORTH);
@@ -227,7 +584,7 @@ public class CargoGUI {
             add(split, BorderLayout.CENTER);
         }
 
-        // ── HEADER ───────────────────────────
+        // ── HEADER (kullanıcı bilgisi + çıkış) ─
         JPanel buildHeader() {
             JPanel p = new JPanel(new BorderLayout());
             p.setBackground(SURFACE);
@@ -246,6 +603,10 @@ public class CargoGUI {
             left.add(title);
             left.add(sub);
 
+            // Sağ: saat + kullanıcı + çıkış
+            JPanel right = new JPanel(new FlowLayout(FlowLayout.RIGHT, 14, 0));
+            right.setBackground(SURFACE);
+
             JLabel clock = new JLabel();
             clock.setFont(MONO_SM);
             clock.setForeground(TEXT_MUTED);
@@ -254,12 +615,44 @@ public class CargoGUI {
             timer.start();
             clock.setText(LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd.MM.yyyy  HH:mm:ss")));
 
+            // Kullanıcı rozeti
+            JLabel userBadge = new JLabel("👤 " + currentUser.fullName);
+            userBadge.setFont(MONO_BOLD);
+            userBadge.setForeground(GREEN);
+            userBadge.setBorder(BorderFactory.createCompoundBorder(
+                    BorderFactory.createLineBorder(new Color(0x3FB950, true), 1),
+                    BorderFactory.createEmptyBorder(3, 10, 3, 10)));
+
+            // Çıkış butonu
+            JButton logoutBtn = new JButton("⎋ Çıkış");
+            logoutBtn.setFont(MONO_BOLD);
+            logoutBtn.setForeground(RED);
+            logoutBtn.setBackground(SURFACE2);
+            logoutBtn.setBorder(BorderFactory.createCompoundBorder(
+                    BorderFactory.createLineBorder(BORDER),
+                    BorderFactory.createEmptyBorder(3, 10, 3, 10)));
+            logoutBtn.setFocusPainted(false);
+            logoutBtn.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+            logoutBtn.addActionListener(e -> {
+                int ans = JOptionPane.showConfirmDialog(this,
+                        "Çıkış yapmak istiyor musunuz?", "Çıkış",
+                        JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
+                if (ans == JOptionPane.YES_OPTION) {
+                    dispose();
+                    SwingUtilities.invokeLater(() -> new AuthWindow(cms).setVisible(true));
+                }
+            });
+
+            right.add(clock);
+            right.add(userBadge);
+            right.add(logoutBtn);
+
             p.add(left,  BorderLayout.WEST);
-            p.add(clock, BorderLayout.EAST);
+            p.add(right, BorderLayout.EAST);
             return p;
         }
 
-        // ── SOL PANEL (Sidebar) ───────────────
+        // ── SOL PANEL ────────────────────────
         JPanel buildSidebar() {
             JPanel p = new JPanel();
             p.setLayout(new BoxLayout(p, BoxLayout.Y_AXIS));
@@ -391,14 +784,10 @@ public class CargoGUI {
             return nb;
         }
 
-        // ─────────────────────────────────────
-        // SEKME 1 – Kargolar (AVL ağacından)
-        // ─────────────────────────────────────
         JPanel buildCargoTab() {
             JPanel p = new JPanel(new BorderLayout());
             p.setBackground(BG);
 
-            // Toolbar
             JPanel tb = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 8));
             tb.setBackground(SURFACE);
 
@@ -427,14 +816,12 @@ public class CargoGUI {
 
             p.add(tb, BorderLayout.NORTH);
 
-            // Tablo
             String[] cols = {"ID","Gönderici","Alıcı","Ağırlık","Hacim","Öncelik","Durum","Hedef","Değer"};
             cargoModel = model(cols);
             cargoTable = makeTable(cargoModel);
             setupCargoRenderer();
             p.add(scroll(cargoTable), BorderLayout.CENTER);
 
-            // Alt butonlar
             JPanel act = new JPanel(new FlowLayout(FlowLayout.LEFT, 6, 6));
             act.setBackground(SURFACE);
 
@@ -453,9 +840,6 @@ public class CargoGUI {
             return p;
         }
 
-        // ─────────────────────────────────────
-        // SEKME 2 – Öncelik Kuyruğu (Min-Heap)
-        // ─────────────────────────────────────
         JPanel buildQueueTab() {
             JPanel p = new JPanel(new BorderLayout());
             p.setBackground(BG);
@@ -470,7 +854,6 @@ public class CargoGUI {
             queueTable = makeTable(queueModel);
             p.add(scroll(queueTable), BorderLayout.CENTER);
 
-            // Heap kutu görseli
             JPanel heapRow = new JPanel(new FlowLayout(FlowLayout.LEFT, 4, 6));
             heapRow.setBackground(BG);
             heapRow.setBorder(BorderFactory.createEmptyBorder(0, 12, 4, 12));
@@ -483,9 +866,6 @@ public class CargoGUI {
             return p;
         }
 
-        // ─────────────────────────────────────
-        // SEKME 3 – Paketler
-        // ─────────────────────────────────────
         JPanel buildPackagesTab() {
             JPanel p = new JPanel(new BorderLayout());
             p.setBackground(BG);
@@ -494,7 +874,6 @@ public class CargoGUI {
             split.setBackground(BG);
             split.setDividerSize(4);
 
-            // Sol
             JPanel left = new JPanel(new BorderLayout());
             left.setBackground(BG);
             left.add(padLabel("  PAKETLER (First-Fit Decreasing)"), BorderLayout.NORTH);
@@ -506,7 +885,6 @@ public class CargoGUI {
             left.add(scroll(pkgTable), BorderLayout.CENTER);
             split.setLeftComponent(left);
 
-            // Sağ
             JPanel right = new JPanel(new BorderLayout());
             right.setBackground(SURFACE);
             right.setBorder(BorderFactory.createLineBorder(BORDER));
@@ -538,9 +916,6 @@ public class CargoGUI {
             return p;
         }
 
-        // ─────────────────────────────────────
-        // SEKME 4 – Rota Graf (Dijkstra)
-        // ─────────────────────────────────────
         JPanel buildRouteTab() {
             JPanel p = new JPanel(new BorderLayout());
             p.setBackground(BG);
@@ -583,9 +958,6 @@ public class CargoGUI {
             return p;
         }
 
-        // ─────────────────────────────────────
-        // SEKME 5 – İşlem Geçmişi (Stack)
-        // ─────────────────────────────────────
         JPanel buildHistoryTab() {
             JPanel p = new JPanel(new BorderLayout());
             p.setBackground(BG);
@@ -604,7 +976,7 @@ public class CargoGUI {
         }
 
         // ─────────────────────────────────────
-        // YENİLEME FONKSİYONLARI
+        // YENİLEME
         // ─────────────────────────────────────
         void refreshAll() {
             refreshStats();
@@ -624,8 +996,8 @@ public class CargoGUI {
 
         void refreshCargoTable() {
             cargoModel.setRowCount(0);
-            String srch  = searchField  != null ? searchField.getText().toLowerCase().trim() : "";
-            String filt  = statusFilter != null ? (String) statusFilter.getSelectedItem() : "Tümü";
+            String srch = searchField  != null ? searchField.getText().toLowerCase().trim() : "";
+            String filt = statusFilter != null ? (String) statusFilter.getSelectedItem() : "Tümü";
 
             for (CargoBackend.Cargo c : cms.getAllCargosSorted()) {
                 if (!"Tümü".equals(filt) && !c.status.label.equals(filt)) continue;
@@ -650,10 +1022,10 @@ public class CargoGUI {
                     super.getTableCellRendererComponent(t, v, sel, foc, row, col);
                     setBackground(row % 2 == 0 ? SURFACE : SURFACE2);
                     setForeground(TEXT);
-                    if (col == 5) { // Öncelik
+                    if (col == 5) {
                         for (CargoBackend.Priority pr : CargoBackend.Priority.values())
                             if (pr.label.equals(v)) { setForeground(priorityColor(pr)); break; }
-                    } else if (col == 6) { // Durum
+                    } else if (col == 6) {
                         for (CargoBackend.CargoStatus st : CargoBackend.CargoStatus.values())
                             if (st.label.equals(v)) { setForeground(statusColor(st)); break; }
                     }
@@ -678,7 +1050,6 @@ public class CargoGUI {
                 });
             }
 
-            // Renklendirme
             queueTable.setDefaultRenderer(Object.class, new DefaultTableCellRenderer() {
                 public Component getTableCellRendererComponent(JTable t, Object v,
                                                                boolean sel, boolean foc, int row, int col) {
@@ -694,7 +1065,6 @@ public class CargoGUI {
                 }
             });
 
-            // Heap kutuları
             heapBoxesPanel.removeAll();
             int lim = Math.min(items.size(), 14);
             for (int j = 0; j < lim; j++) {
@@ -856,7 +1226,6 @@ public class CargoGUI {
             g.fill = GridBagConstraints.HORIZONTAL;
             g.insets = new Insets(5, 5, 5, 5);
 
-            // Başlık
             JLabel title = new JLabel("Yeni Kargo Ekle");
             title.setFont(new Font("Consolas", Font.BOLD, 15));
             title.setForeground(ACCENT);
@@ -876,19 +1245,17 @@ public class CargoGUI {
                 form.add(flds[i], g);
             }
 
-            // Öncelik
             JLabel priLbl = new JLabel("Öncelik");
             priLbl.setFont(MONO); priLbl.setForeground(TEXT_DIM);
             g.gridx = 0; g.gridy = 6; g.weightx = 0;
             form.add(priLbl, g);
             JComboBox<String> priBox = new JComboBox<>(
-                    Arrays.stream(CargoBackend.Priority.values()).map(p -> p.label).toArray(String[]::new));
+                    Arrays.stream(CargoBackend.Priority.values()).map(pr -> pr.label).toArray(String[]::new));
             priBox.setSelectedIndex(2);
             styleCombo(priBox);
             g.gridx = 1; g.weightx = 1;
             form.add(priBox, g);
 
-            // Hedef
             JLabel dstLbl = new JLabel("Hedef Şehir");
             dstLbl.setFont(MONO); dstLbl.setForeground(TEXT_DIM);
             g.gridx = 0; g.gridy = 7; g.weightx = 0;
@@ -922,7 +1289,7 @@ public class CargoGUI {
                             : Double.parseDouble(flds[4].getText().trim());
                     String priStr = (String) priBox.getSelectedItem();
                     CargoBackend.Priority pri = Arrays.stream(CargoBackend.Priority.values())
-                            .filter(p -> p.label.equals(priStr)).findFirst()
+                            .filter(pr -> pr.label.equals(priStr)).findFirst()
                             .orElse(CargoBackend.Priority.NORMAL);
                     String dst = (String) dstBox.getSelectedItem();
                     cms.addCargo(s, r, w, v, pri, dst, val);
@@ -962,8 +1329,7 @@ public class CargoGUI {
             t.getTableHeader().setBackground(SURFACE2);
             t.getTableHeader().setForeground(ACCENT);
             t.getTableHeader().setFont(MONO_BOLD);
-            t.getTableHeader().setBorder(
-                    BorderFactory.createMatteBorder(0, 0, 1, 0, BORDER));
+            t.getTableHeader().setBorder(BorderFactory.createMatteBorder(0, 0, 1, 0, BORDER));
             return t;
         }
 
@@ -1055,22 +1421,24 @@ public class CargoGUI {
         SwingUtilities.invokeLater(() -> {
             try {
                 UIManager.setLookAndFeel(UIManager.getCrossPlatformLookAndFeelClassName());
-                UIManager.put("Panel.background",            new Color(0x0D1117));
-                UIManager.put("OptionPane.background",       new Color(0x161B22));
-                UIManager.put("OptionPane.messageForeground",new Color(0xE6EDF3));
-                UIManager.put("Button.background",           new Color(0x21262D));
-                UIManager.put("Button.foreground",           new Color(0xE6EDF3));
-                UIManager.put("ComboBox.background",         new Color(0x21262D));
-                UIManager.put("ComboBox.foreground",         new Color(0xE6EDF3));
-                UIManager.put("TextField.background",        new Color(0x21262D));
-                UIManager.put("TextField.foreground",        new Color(0xE6EDF3));
-                UIManager.put("Label.foreground",            new Color(0xE6EDF3));
-                UIManager.put("TabbedPane.background",       new Color(0x0D1117));
-                UIManager.put("TabbedPane.foreground",       new Color(0x8B949E));
-                UIManager.put("SplitPane.background",        new Color(0x0D1117));
+                UIManager.put("Panel.background",             new Color(0x0D1117));
+                UIManager.put("OptionPane.background",        new Color(0x161B22));
+                UIManager.put("OptionPane.messageForeground", new Color(0xE6EDF3));
+                UIManager.put("Button.background",            new Color(0x21262D));
+                UIManager.put("Button.foreground",            new Color(0xE6EDF3));
+                UIManager.put("ComboBox.background",          new Color(0x21262D));
+                UIManager.put("ComboBox.foreground",          new Color(0xE6EDF3));
+                UIManager.put("TextField.background",         new Color(0x21262D));
+                UIManager.put("TextField.foreground",         new Color(0xE6EDF3));
+                UIManager.put("Label.foreground",             new Color(0xE6EDF3));
+                UIManager.put("TabbedPane.background",        new Color(0x0D1117));
+                UIManager.put("TabbedPane.foreground",        new Color(0x8B949E));
+                UIManager.put("SplitPane.background",         new Color(0x0D1117));
             } catch (Exception ignored) {}
 
-            new MainWindow().setVisible(true);
+            // Önce sistemi oluştur, sonra login ekranını aç
+            CargoBackend.CargoManagementSystem cms = new CargoBackend.CargoManagementSystem();
+            new AuthWindow(cms).setVisible(true);
         });
     }
 }
