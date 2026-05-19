@@ -53,6 +53,45 @@ public class CargoGUI {
         };
     }
 
+    // Tum siniflardan erisebilen tek scrollbar stilleyici
+    static void styleScrollBar(JScrollPane sp) {
+        javax.swing.JScrollBar vsb = sp.getVerticalScrollBar();
+        vsb.setUnitIncrement(12);
+        vsb.setPreferredSize(new Dimension(10, 0));
+        vsb.setUI(new javax.swing.plaf.basic.BasicScrollBarUI() {
+            @Override protected void configureScrollBarColors() {
+                thumbColor            = new Color(0x30363D);
+                thumbHighlightColor   = new Color(0x58A6FF);
+                thumbDarkShadowColor  = new Color(0x0D1117);
+                thumbLightShadowColor = new Color(0x21262D);
+                trackColor            = new Color(0x161B22);
+                trackHighlightColor   = new Color(0x161B22);
+            }
+            @Override protected JButton createDecreaseButton(int o) { return zeroBtn(); }
+            @Override protected JButton createIncreaseButton(int o) { return zeroBtn(); }
+            private JButton zeroBtn() {
+                JButton b = new JButton();
+                b.setPreferredSize(new Dimension(0, 0));
+                b.setMinimumSize(new Dimension(0, 0));
+                b.setMaximumSize(new Dimension(0, 0));
+                return b;
+            }
+            @Override protected void paintThumb(Graphics g, JComponent c, Rectangle r) {
+                if (r.isEmpty()) return;
+                Graphics2D g2 = (Graphics2D) g.create();
+                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                Color base = isDragging ? new Color(0x58A6FF) : new Color(0x3D4450);
+                g2.setColor(base);
+                g2.fillRoundRect(r.x + 2, r.y + 2, r.width - 4, r.height - 4, 6, 6);
+                g2.dispose();
+            }
+            @Override protected void paintTrack(Graphics g, JComponent c, Rectangle r) {
+                g.setColor(new Color(0x161B22));
+                g.fillRect(r.x, r.y, r.width, r.height);
+            }
+        });
+    }
+
     // ═══════════════════════════════════════════
     //  GİRİŞ / KAYIT EKRANI
     // ═══════════════════════════════════════════
@@ -79,8 +118,8 @@ public class CargoGUI {
             super("🚚 Kargo Yönetim Sistemi – Giriş");
             this.cms = cms;
             setDefaultCloseOperation(EXIT_ON_CLOSE);
-            setSize(460, 560);
-            setResizable(false);
+            setSize(460, 680);
+            setResizable(true);
             setLocationRelativeTo(null);
             getContentPane().setBackground(BG);
             setLayout(new BorderLayout());
@@ -226,86 +265,81 @@ public class CargoGUI {
 
         // ── KAYIT PANELİ ────────────────────
         JPanel buildRegisterPanel() {
-            JPanel outer = new JPanel(new GridBagLayout());
-            outer.setBackground(BG);
-
+            // Form içeriği
             JPanel p = new JPanel();
             p.setLayout(new BoxLayout(p, BoxLayout.Y_AXIS));
             p.setBackground(SURFACE);
-            p.setBorder(BorderFactory.createCompoundBorder(
-                    BorderFactory.createLineBorder(BORDER, 1),
-                    BorderFactory.createEmptyBorder(24, 32, 24, 32)
-            ));
+            p.setBorder(BorderFactory.createEmptyBorder(20, 32, 20, 32));
 
             JLabel h = new JLabel("Yeni Hesap Oluştur");
             h.setFont(new Font("Consolas", Font.BOLD, 15));
             h.setForeground(TEXT);
             h.setAlignmentX(Component.CENTER_ALIGNMENT);
             p.add(h);
-            p.add(Box.createVerticalStrut(20));
+            p.add(Box.createVerticalStrut(14));
 
             // Ad Soyad
             p.add(authLabel("Ad Soyad"));
-            p.add(Box.createVerticalStrut(4));
-            regFullNameField = authField("Ahmet Yılmaz");
+            p.add(Box.createVerticalStrut(3));
+            regFullNameField = authField("Ahmet Yilmaz");
             p.add(regFullNameField);
-            p.add(Box.createVerticalStrut(12));
+            p.add(Box.createVerticalStrut(9));
 
-            // Kullanıcı adı
-            p.add(authLabel("Kullanıcı Adı"));
-            p.add(Box.createVerticalStrut(4));
+            // Kullanici adi
+            p.add(authLabel("Kullanici Adi"));
+            p.add(Box.createVerticalStrut(3));
             regUserField = authField("kullanici123");
             p.add(regUserField);
-            p.add(Box.createVerticalStrut(12));
+            p.add(Box.createVerticalStrut(9));
 
             // E-posta
             p.add(authLabel("E-posta"));
-            p.add(Box.createVerticalStrut(4));
+            p.add(Box.createVerticalStrut(3));
             regEmailField = authField("ornek@email.com");
             p.add(regEmailField);
-            p.add(Box.createVerticalStrut(12));
+            p.add(Box.createVerticalStrut(9));
 
-            // Şifre
-            p.add(authLabel("Şifre (en az 6 karakter)"));
-            p.add(Box.createVerticalStrut(4));
+            // Sifre
+            p.add(authLabel("Sifre (en az 6 karakter)"));
+            p.add(Box.createVerticalStrut(3));
             regPassField = authPassField("");
             p.add(regPassField);
-            p.add(Box.createVerticalStrut(12));
+            p.add(Box.createVerticalStrut(9));
 
-            // Şifre tekrar
-            p.add(authLabel("Şifre Tekrar"));
-            p.add(Box.createVerticalStrut(4));
+            // Sifre tekrar
+            p.add(authLabel("Sifre Tekrar"));
+            p.add(Box.createVerticalStrut(3));
             regPassConfirmField = authPassField("");
             p.add(regPassConfirmField);
-            p.add(Box.createVerticalStrut(12));
+            p.add(Box.createVerticalStrut(8));
 
-            // Hata
+            // Hata etiketi
             regErrLabel = new JLabel(" ");
             regErrLabel.setFont(MONO_SM);
             regErrLabel.setForeground(RED);
             regErrLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
             p.add(regErrLabel);
-            p.add(Box.createVerticalStrut(6));
+            p.add(Box.createVerticalStrut(4));
 
-            // Kayıt butonu
-            JButton regBtn = bigBtn("Kayıt Ol", GREEN, BG);
+            // Kayit butonu
+            JButton regBtn = bigBtn("✅  Kayit Ol", GREEN, BG);
             regBtn.addActionListener(e -> doRegister());
             p.add(regBtn);
-            p.add(Box.createVerticalStrut(14));
+            p.add(Box.createVerticalStrut(10));
 
             JSeparator sep = new JSeparator();
             sep.setForeground(BORDER);
             sep.setMaximumSize(new Dimension(300, 1));
             sep.setAlignmentX(Component.CENTER_ALIGNMENT);
             p.add(sep);
-            p.add(Box.createVerticalStrut(12));
+            p.add(Box.createVerticalStrut(10));
 
             JPanel linkRow = new JPanel(new FlowLayout(FlowLayout.CENTER, 4, 0));
             linkRow.setBackground(SURFACE);
-            JLabel linkLbl = new JLabel("Zaten hesabın var mı?");
+            JLabel linkLbl = new JLabel("Zaten hesabin var mi?");
             linkLbl.setFont(MONO_SM);
             linkLbl.setForeground(TEXT_DIM);
-            JButton loginLink = linkBtn("Giriş Yap");
+            JButton loginLink = linkBtn("Giris Yap");
             loginLink.addActionListener(e -> {
                 regErrLabel.setText(" ");
                 cardLayout.show(cardPanel, "LOGIN");
@@ -315,7 +349,18 @@ public class CargoGUI {
             linkRow.setAlignmentX(Component.CENTER_ALIGNMENT);
             p.add(linkRow);
 
-            outer.add(p);
+            // ScrollPane - icerik sigmaz ise kaydirilabilir
+            JScrollPane scrollPane = new JScrollPane(p,
+                    JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED,
+                    JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
+            scrollPane.setBorder(BorderFactory.createLineBorder(BORDER, 1));
+            scrollPane.getViewport().setBackground(SURFACE);
+            styleScrollBar(scrollPane);
+
+            JPanel outer = new JPanel(new BorderLayout());
+            outer.setBackground(BG);
+            outer.setBorder(BorderFactory.createEmptyBorder(8, 40, 8, 40));
+            outer.add(scrollPane, BorderLayout.CENTER);
             return outer;
         }
 
@@ -658,16 +703,15 @@ public class CargoGUI {
             p.setLayout(new BoxLayout(p, BoxLayout.Y_AXIS));
             p.setBackground(SURFACE);
             p.setBorder(BorderFactory.createEmptyBorder(12, 12, 12, 12));
-            p.setPreferredSize(new Dimension(245, 0));
 
-            sideSection(p, "GENEL ÖZET");
+            sideSection(p, "GENEL OZET");
             Object[][] statDefs = {
                     {"toplam",     "Toplam Kargo",   0x58A6FF},
                     {"bekleyen",   "Bekleyen",        0xE3B341},
                     {"paketlendi", "Paketlendi",      0x58A6FF},
-                    {"dagitimda",  "Dağıtımda",       0xF0883E},
+                    {"dagitimda",  "Dagitimda",       0xF0883E},
                     {"teslim",     "Teslim Edildi",   0x3FB950},
-                    {"iptal",      "İptal",           0xFF7B72},
+                    {"iptal",      "Iptal",           0xFF7B72},
             };
             for (Object[] d : statDefs) {
                 Color c = new Color((int)(Integer)d[2]);
@@ -676,13 +720,13 @@ public class CargoGUI {
             }
 
             p.add(vgap(8)); sideSep(p); p.add(vgap(8));
-            sideSection(p, "VERİ YAPILARI");
+            sideSection(p, "VERI YAPILARI");
 
             Object[][] dsDefs = {
-                    {"avlYukseklik", "AVL Yüksekliği",  0xBC8CFF},
+                    {"avlYukseklik", "AVL Yuksekligi",  0xBC8CFF},
                     {"kuyrukBoyut",  "Kuyruk (Heap)",    0xF0883E},
-                    {"stackBoyut",   "Stack (İşlem)",    0x58A6FF},
-                    {"paketSayisi",  "Paket Sayısı",     0x3FB950},
+                    {"stackBoyut",   "Stack (Islem)",    0x58A6FF},
+                    {"paketSayisi",  "Paket Sayisi",     0x3FB950},
             };
             for (Object[] d : dsDefs) {
                 Color c = new Color((int)(Integer)d[2]);
@@ -691,9 +735,9 @@ public class CargoGUI {
             }
 
             p.add(vgap(8)); sideSep(p); p.add(vgap(8));
-            sideSection(p, "HIZLI İŞLEMLER");
+            sideSection(p, "HIZLI ISLEMLER");
 
-            String[]   btnTxts  = {"⚡ Otomatik Paketle", "↩ Son İşlemi Geri Al", "🔄 Yenile"};
+            String[]   btnTxts  = {"Otomatik Paketle", "Son Islemi Geri Al", "Yenile"};
             Color[]    btnClrs  = {GREEN, ORANGE, ACCENT};
             Runnable[] btnCmds  = {this::autoPackage, this::undoAction, this::refreshAll};
             for (int i = 0; i < btnTxts.length; i++) {
@@ -702,7 +746,20 @@ public class CargoGUI {
             }
 
             p.add(Box.createVerticalGlue());
-            return p;
+
+            // ScrollPane wrapper
+            JScrollPane scroll = new JScrollPane(p,
+                    JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED,
+                    JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
+            scroll.setBorder(BorderFactory.createMatteBorder(0, 0, 0, 1, BORDER));
+            scroll.getViewport().setBackground(SURFACE);
+            scroll.setPreferredSize(new Dimension(245, 0));
+            styleScrollBar(scroll);
+
+            JPanel wrapper = new JPanel(new BorderLayout());
+            wrapper.setBackground(SURFACE);
+            wrapper.add(scroll, BorderLayout.CENTER);
+            return wrapper;
         }
 
         JPanel statCard(String key, String label, Color color,
@@ -825,17 +882,21 @@ public class CargoGUI {
             JPanel act = new JPanel(new FlowLayout(FlowLayout.LEFT, 6, 6));
             act.setBackground(SURFACE);
 
-            JButton deliv  = actionBtn("✅ Teslim Et",   GREEN);
-            JButton cancel = actionBtn("❌ İptal Et",    RED);
-            JButton pkg    = actionBtn("📦 Paketle",     ACCENT);
-            JButton detail = actionBtn("🔍 Detay",       PURPLE);
+            JButton deliv  = actionBtn("Teslim Et",   GREEN);
+            JButton cancel = actionBtn("Iptal Et",    RED);
+            JButton pkg    = actionBtn("Paketle",     ACCENT);
+            JButton detail = actionBtn("Detay",       PURPLE);
+            JButton delete = actionBtn("Sil",         RED);
 
             deliv.addActionListener(e  -> deliverSelected());
             cancel.addActionListener(e -> cancelSelected());
             pkg.addActionListener(e    -> packageSelected());
             detail.addActionListener(e -> showCargoDetail());
+            delete.addActionListener(e -> deleteSelected());
 
             act.add(deliv); act.add(cancel); act.add(pkg); act.add(detail);
+            act.add(Box.createHorizontalStrut(12));
+            act.add(delete);
             p.add(act, BorderLayout.SOUTH);
             return p;
         }
@@ -1150,9 +1211,20 @@ public class CargoGUI {
 
         void cancelSelected() {
             String id = selectedCargoId();
-            if (id == null) { warn("Lütfen bir kargo seçin."); return; }
-            if (cms.cancelCargo(id)) { refreshAll(); info("❌ " + id + " iptal edildi."); }
+            if (id == null) { warn("Lutfen bir kargo secin."); return; }
+            if (cms.cancelCargo(id)) { refreshAll(); info(id + " iptal edildi."); }
             else err("Kargo iptal edilemedi.");
+        }
+
+        void deleteSelected() {
+            String id = selectedCargoId();
+            if (id == null) { warn("Lutfen bir kargo secin."); return; }
+            int ans = JOptionPane.showConfirmDialog(this,
+                    id + " numarali kargo kalici olarak silinecek.\nEmin misiniz?",
+                    "Kargoyu Sil", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
+            if (ans != JOptionPane.YES_OPTION) return;
+            if (cms.deleteCargo(id)) { refreshAll(); info(id + " silindi."); }
+            else err("Kargo silinemedi.");
         }
 
         void packageSelected() {
@@ -1337,6 +1409,7 @@ public class CargoGUI {
             JScrollPane sp = new JScrollPane(t);
             sp.getViewport().setBackground(SURFACE);
             sp.setBorder(BorderFactory.createLineBorder(BORDER));
+            styleScrollBar(sp);
             return sp;
         }
 
@@ -1434,6 +1507,17 @@ public class CargoGUI {
                 UIManager.put("TabbedPane.background",        new Color(0x0D1117));
                 UIManager.put("TabbedPane.foreground",        new Color(0x8B949E));
                 UIManager.put("SplitPane.background",         new Color(0x0D1117));
+                UIManager.put("ScrollBar.background",         new Color(0x161B22));
+                UIManager.put("ScrollBar.thumb",              new Color(0x30363D));
+                UIManager.put("ScrollBar.thumbHighlight",     new Color(0x58A6FF));
+                UIManager.put("ScrollBar.thumbShadow",        new Color(0x21262D));
+                UIManager.put("ScrollBar.track",              new Color(0x161B22));
+                UIManager.put("ScrollBar.trackHighlight",     new Color(0x161B22));
+                UIManager.put("ScrollBar.darkShadow",         new Color(0x0D1117));
+                UIManager.put("ScrollBar.shadow",             new Color(0x21262D));
+                UIManager.put("ScrollBar.highlight",          new Color(0x30363D));
+                UIManager.put("ScrollBar.width",              14);
+                UIManager.put("ScrollPane.border",            BorderFactory.createEmptyBorder());
             } catch (Exception ignored) {}
 
             // Önce sistemi oluştur, sonra login ekranını aç

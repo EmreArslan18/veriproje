@@ -180,6 +180,11 @@ public class CargoBackend {
 
         public int treeHeight() { return height(root); }
         public int size()       { return size; }
+
+        public void replaceWith(AVLTree other) {
+            this.root = other.root;
+            this.size = other.size;
+        }
     }
 
     public static class ActionStack {
@@ -459,6 +464,24 @@ public class CargoBackend {
             c.status    = CargoStatus.IPTAL;
             c.updatedAt = LocalDateTime.now();
             stack.push(new ActionStack.Action("IPTAL", id, id + " iptal edildi"));
+            return true;
+        }
+
+        public boolean deleteCargo(String id) {
+            Cargo c = cargos.get(id);
+            if (c == null) return false;
+            // Paket icindeyse paketten cikar
+            if (c.packageId != null) {
+                Package pkg = packages.get(c.packageId);
+                if (pkg != null) pkg.cargos.remove(c);
+            }
+            cargos.remove(id);
+            // AVL agacindan da kaldir (yeni agac olustur)
+            AVLTree newTree = new AVLTree();
+            for (Cargo remaining : cargos.values()) newTree.insert(remaining);
+            // avl field'ini replace et
+            avl.replaceWith(newTree);
+            stack.push(new ActionStack.Action("SIL", id, id + " silindi"));
             return true;
         }
 
